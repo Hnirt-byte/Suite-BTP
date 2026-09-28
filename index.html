@@ -47,8 +47,8 @@ button{font-family:inherit}
 @keyframes blink{50%{opacity:.3}}
 
 /* ═══ LAYOUT ═══ */
-.app{display:flex;min-height:calc(100vh - 58px)}
-.sidebar{width:240px;min-width:240px;background:var(--surface);border-right:1px solid var(--border);padding:10px 0 20px;display:flex;flex-direction:column;position:sticky;top:58px;height:calc(100vh - 58px);overflow-y:auto}
+.app{display:flex;min-height:calc(100vh - var(--tb-h,58px))}
+.sidebar{width:240px;min-width:240px;background:var(--surface);border-right:1px solid var(--border);padding:10px 0 20px;display:flex;flex-direction:column;position:sticky;top:var(--tb-h,58px);height:calc(100vh - var(--tb-h,58px));overflow-y:auto}
 .sb-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);padding:6px 18px;margin-top:10px}
 .sb-item{display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;transition:all .12s;border:none;border-left:3px solid transparent;background:none;font-size:13px;font-weight:500;color:var(--text);text-align:left;width:100%}
 .sb-item:hover{background:rgba(232,130,12,.05);border-left-color:var(--accent2)}
@@ -56,7 +56,9 @@ button{font-family:inherit}
 .sb-ico{font-size:16px;width:22px;text-align:center}
 .nav-badge{margin-left:auto;background:var(--navy);color:#fff;font-family:'JetBrains Mono',monospace;font-size:10px;padding:1px 7px;border-radius:9px}
 .nav-badge:empty{display:none}
-.main{flex:1;padding:24px;max-width:860px;min-width:0}
+.main{flex:1;padding:24px;max-width:1040px;min-width:0}
+.main.wide{max-width:none}   /* mesure sur plan : toute la largeur disponible */
+@media(min-width:1440px){.main{max-width:1760px}}
 @media(max-width:768px){
   .app{flex-direction:column}
   .sidebar{width:100%;min-width:100%;flex-direction:row;overflow-x:auto;position:sticky;top:0;height:auto;padding:6px;gap:2px;border-right:none;border-bottom:1px solid var(--border);z-index:40}
@@ -85,6 +87,12 @@ button{font-family:inherit}
 .mod-header{margin-bottom:18px}
 .mod-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;letter-spacing:1px;text-transform:uppercase;color:var(--navy);display:flex;align-items:center;gap:10px}
 .mod-desc{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.6}
+/* Grand écran : cartes sur 2 colonnes ; les éléments hors carte et les cartes seules prennent toute la ligne */
+@media(min-width:1440px){
+  .module.visible{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:16px;align-items:start}
+  .module>:not(.calc-card),.module>.calc-card.cc-full{grid-column:1/-1}
+  .module>.ref-toggle{justify-self:start}
+}
 
 /* ═══ CARDS ═══ */
 .calc-card{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--navy);margin-bottom:16px;box-shadow:var(--shadow)}
@@ -207,6 +215,22 @@ select.fi{cursor:pointer}
 .pm-empty{padding:60px 20px;text-align:center;color:var(--muted);font-family:'Barlow Condensed',sans-serif;letter-spacing:2px;text-transform:uppercase;font-size:12px}
 .pm-status{font-size:12px;margin:8px 0;padding:8px 12px;background:var(--surface2);border-left:3px solid var(--blue)}
 .chk{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--navy);cursor:pointer;padding:0 6px}
+/* Grand écran (≥ 1500 × 800) : plan en grand à gauche, commandes et résultats dans un panneau à droite.
+   En dessous (portable, tablette, mobile), disposition empilée pleine largeur.
+   L'ordre du HTML (commandes → plan → résultats) reste celui du mobile. */
+@media(min-width:1500px) and (min-height:800px){
+  .pm-layout{display:grid;grid-template-columns:minmax(0,1fr) 370px;grid-template-rows:auto 1fr;column-gap:18px;align-items:start}
+  .pm-main{grid-column:1;grid-row:1/span 2}
+  .pm-side-top{grid-column:2;grid-row:1}
+  .pm-side-bottom{grid-column:2;grid-row:2}
+  .pm-layout .grid-3{grid-template-columns:1fr;gap:0}
+  .pm-layout #pmTools{display:flex;width:100%}
+  .pm-layout #pmTools button{flex:1;padding:8px 4px}
+  .pm-layout .pm-status{margin-top:0}
+  .pm-layout .result-box{margin-top:0}
+  .pm-layout #pmList{max-height:44vh;overflow:auto}
+  .pm-stage{max-height:none;height:70vh;min-height:420px}
+}
 
 /* ═══ PRINT ═══ */
 @media print{
@@ -442,7 +466,8 @@ select.fi{cursor:pointer}
     <div class="mod-desc">Ouvrez un plan PDF ou une photo/scan, calibrez l'échelle, puis cliquez pour mesurer longueurs, surfaces ou compter des éléments. Le plan reste sur l'appareil (non sauvegardé) ; les mesures envoyées au récap le sont.</div>
   </div>
   <div class="calc-card blue">
-    <div class="cc-body">
+    <div class="cc-body pm-layout">
+      <div class="pm-side-top">
       <div class="pm-toolbar">
         <label class="btn btn-orange" for="pmFile" style="display:inline-flex;align-items:center">📂 Ouvrir un plan</label>
         <input type="file" id="pmFile" accept="application/pdf,.pdf,image/png,image/jpeg,image/webp" hidden>
@@ -473,17 +498,22 @@ select.fi{cursor:pointer}
       </div>
 
       <div class="pm-status" id="pmStatus">Ouvrez un plan pour commencer.</div>
+      </div>
+      <div class="pm-main">
       <div class="pm-stage" id="pmStage">
         <div class="pm-empty" id="pmEmpty">Aucun plan chargé — PDF, PNG, JPG</div>
         <div class="pm-inner" id="pmInner" hidden><canvas id="pmCanvas"></canvas><svg id="pmSvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Calque de mesure"></svg></div>
       </div>
       <div class="hint">Raccourcis clavier : Entrée = terminer · Échap = abandonner la mesure en cours · Retour arrière = annuler le dernier point. Sur mobile : zoom avec − / +, déplacement au doigt.</div>
+      </div>
 
+      <div class="pm-side-bottom">
       <div class="result-box">
         <div class="res-item"><div class="res-label">Échelle calibrée</div><div class="res-val" id="pmCalRes" style="font-size:15px">—</div></div>
         <div class="res-item"><div class="res-label">Mesure en cours</div><div class="res-val big" id="pmCur">—</div></div>
       </div>
       <div id="pmList"></div>
+      </div>
     </div>
   </div>
 </section>
@@ -1095,7 +1125,7 @@ select.fi{cursor:pointer}
 </main>
 </div>
 
-<div class="app-footer">Conçu par <span>Kévin TRINH</span> · Conducteur de travaux · Suite BTP v4</div>
+<div class="app-footer">Conçu par <span>Kévin TRINH</span> · Conducteur de travaux · Suite BTP v4.1</div>
 <input type="file" id="fileImport" accept=".json,application/json" hidden>
 
 <!-- ═══════════ MOTEUR DE CALCUL (fonctions pures, testables) ═══════════ -->
@@ -1353,9 +1383,39 @@ function showModule(mod) {
   document.querySelectorAll('.module').forEach(m => m.classList.toggle('visible', m.id === 'mod-' + mod));
   const btn = document.querySelector(`.sb-item[data-mod="${mod}"]`);
   el('scaleBar').classList.toggle('off', !(btn && btn.dataset.scale));
+  document.querySelector('.main').classList.toggle('wide', mod === 'plan');
+  pmSizeStage();
   // Un graphe calculé pendant que son module était masqué a une largeur fausse : on le redessine.
   if (mod === 'sechage' && suChartState) renderMaturiteSvg();
 }
+// Grand écran : une carte seule dans son module prend toute la largeur de la grille 2 colonnes
+document.querySelectorAll('.module').forEach(m => {
+  const cards = m.querySelectorAll(':scope > .calc-card');
+  if (cards.length === 1) cards[0].classList.add('cc-full');
+});
+// PC : la zone du plan occupe la hauteur d'écran restante (sur mobile, hauteur libre plafonnée par le CSS)
+const PM_WIDE_MQ = '(min-width:1500px) and (min-height:800px)';   // identique au CSS .pm-layout
+const pmWide = () => window.matchMedia(PM_WIDE_MQ).matches;
+function pmSizeStage() {
+  const st = el('pmStage');
+  if (currentMod !== 'plan' || !pmWide()) { st.style.height = ''; return; }
+  const r = st.getBoundingClientRect();
+  const below = st.parentElement.getBoundingClientRect().bottom - r.bottom;   // aide sous le plan
+  st.style.height = Math.max(420, Math.round(window.innerHeight - (r.top + window.scrollY) - below - 30)) + 'px';
+}
+// Hauteur réelle de la barre du haut (collante sur PC) : la barre latérale se cale dessous
+// et les champs atteints au clavier ne passent pas sous la barre.
+function syncTopbar() {
+  const tb = document.querySelector('.topbar'), root = document.documentElement.style;
+  const sticky = getComputedStyle(tb).position === 'sticky';
+  root.setProperty('--tb-h', tb.offsetHeight + 'px');
+  root.scrollPaddingTop = sticky ? (tb.offsetHeight + 8) + 'px' : '';
+}
+function onLayoutChange() { syncTopbar(); pmSizeStage(); }
+syncTopbar();
+let _pmRsT;
+window.addEventListener('resize', () => { clearTimeout(_pmRsT); _pmRsT = setTimeout(onLayoutChange, 120); });
+if (document.fonts) document.fonts.ready.then(onLayoutChange);   // les polices changent la hauteur des en-têtes
 document.querySelectorAll('.sb-item').forEach(b => b.addEventListener('click', () => { showModule(b.dataset.mod); schedSave(); window.scrollTo(0, 0); }));
 document.querySelectorAll('.ref-toggle').forEach(b => b.addEventListener('click', () => el(b.dataset.ref).classList.toggle('open')));
 
@@ -2121,7 +2181,9 @@ async function pmSetZoom(z) {
 async function pmFit() {
   if (!pm.kind) return;
   try { await pmPageSize(); } catch (e) { setHTML('pmStatus', 'Page illisible : ' + esc(e.message || e)); return; }
-  pm.zoom = Math.max(0.05, (el('pmStage').clientWidth - 4) / pm.w) || 1;
+  // Grand écran : page entière visible ; sinon pleine largeur (on fait défiler en hauteur)
+  const st = el('pmStage'), fw = (st.clientWidth - 4) / pm.w, fh = pmWide() ? (st.clientHeight - 4) / pm.h : Infinity;
+  pm.zoom = Math.max(0.05, Math.min(fw, fh)) || 1;
   await pmRender();
 }
 el('pmZoomIn').addEventListener('click', () => pmSetZoom(pm.zoom * 1.25));
@@ -2231,10 +2293,11 @@ function pmUpdate() {
   setHTML('pmStatus', st);
 
   if (!pm.shapes.length) { setHTML('pmList', ''); return; }
-  let h = '<div class="tbl-wrap"><table class="recap-table"><thead><tr><th>#</th><th>Mesure</th><th>Type</th><th class="right">Valeur</th><th class="right">Page</th><th></th><th></th></tr></thead><tbody>';
+  // Colonnes compactes (panneau latéral PC, mobile) : type et page sous le nom
+  let h = '<div class="tbl-wrap"><table class="recap-table"><thead><tr><th>#</th><th>Mesure</th><th class="right">Valeur</th><th></th><th></th></tr></thead><tbody>';
   pm.shapes.forEach((s, i) => {
     const sv = shapeVal(s, u);
-    h += `<tr><td class="mono">${i + 1}</td><td>${esc(s.name)}</td><td>${PM_LABELS[s.type]}</td><td class="right mono">${esc(valTxt(sv))}${sv && sv.per ? `<div class="detail">périm. ${fmt(sv.per)} ml</div>` : ''}</td><td class="right">${s.page}</td>
+    h += `<tr><td class="mono">${i + 1}</td><td>${esc(s.name)}<div class="detail">${PM_LABELS[s.type]}${pm.pages > 1 ? ' · page ' + s.page : ''}</div></td><td class="right mono">${esc(valTxt(sv))}${sv && sv.per ? `<div class="detail">périm. ${fmt(sv.per)} ml</div>` : ''}</td>
       <td><button type="button" class="btn-small pm-send" data-i="${i}" ${sv ? '' : 'disabled'}>${s.sent ? '✓ Au récap' : '→ Récap'}</button></td><td><button type="button" class="btn-del-row pm-del" data-i="${i}" aria-label="Supprimer la mesure">✕</button></td></tr>`;
   });
   setHTML('pmList', h + '</tbody></table></div>');

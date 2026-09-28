@@ -3,7 +3,7 @@
    - pdf.js pré-chargé si le réseau le permet (mesure sur plan PDF hors ligne).
    - Pages de l'appli : cache d'abord, mise à jour en arrière-plan (active au prochain lancement).
    - Polices et bibliothèques externes : cache d'abord, réseau en secours. */
-const VERSION = 'suite-btp-v4.0.0';
+const VERSION = 'suite-btp-v4.1.0';
 const CORE = [
   './',
   './index.html',
